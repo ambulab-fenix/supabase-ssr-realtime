@@ -2,12 +2,15 @@ import type { Request, Response } from "express";
 
 export interface WatchRequest extends Request {}
 
-export function watch(req: WatchRequest, res: Response) {
+export async function watch(req: WatchRequest, res: Response) {
   const { user, supabase } = req;
 
   if (!supabase)
     throw new Error("Supabase client is required to watch ambulances");
   if (!user) throw new Error("You must be authenticated to watch ambulances");
+
+  // Culprit: supabase.realtime.setAuth is required for the realtime channel to know who is the user connected.
+  await supabase.realtime.setAuth();
 
   const channel = supabase
     .channel(`ambulance-${user.id}`)
